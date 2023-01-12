@@ -5,7 +5,7 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.filters import SearchFilter
 from rest_framework import viewsets
 
-from posts.models import Group, Post, Follow
+from posts.models import Group, Post
 from .serializers import (PostSerializer,
                           GroupSerializer,
                           CommentSerializer,
@@ -16,7 +16,7 @@ from .mixins import CreateListViewSet
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.select_related('author', 'group')
-    permission_classes = (IsAuthorOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly, IsAuthenticatedOrReadOnly)
     serializer_class = PostSerializer
     pagination_class = LimitOffsetPagination
 
@@ -26,12 +26,11 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = GroupSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthorOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly, IsAuthenticatedOrReadOnly)
     serializer_class = CommentSerializer
 
     def get_post_obj(self):
@@ -54,9 +53,7 @@ class FollowViewSet(CreateListViewSet):
     search_fields = ('following__username',)
 
     def get_queryset(self):
-        new_queryset = Follow.objects.filter(user=self.request.user)
-        return new_queryset
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
-        serializer.save(user=user)
+        serializer.save(user=self.request.user)
