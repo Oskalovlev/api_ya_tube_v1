@@ -6,7 +6,7 @@
 
 ### Технологии
 ```sh
--Python 3.7
+-Python 3.7.9
 -Django==3.2.16
 -DRF
 -JWT
